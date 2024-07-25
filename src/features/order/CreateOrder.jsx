@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Form, redirect } from "react-router-dom";
+import { Form, redirect, useActionData, useNavigation } from "react-router-dom";
 import { createOrder } from "../../services/apiRestaurant";
 
 // https://uibakery.io/regex-library/phone-number
@@ -33,6 +33,12 @@ const fakeCart = [
 ];
 
 function CreateOrder() {
+  const navigation = useNavigation()
+  const isSubmitting = navigation.state === "submitting"
+
+  // Getting access to the data connected with route that have the action.
+  const formsErrors = useActionData()
+
   // const [withPriority, setWithPriority] = useState(false);
   const cart = fakeCart;
 
@@ -51,6 +57,7 @@ function CreateOrder() {
           <div>
             <input type="tel" name="phone" required />
           </div>
+          {formsErrors?.phone && <p>{formsErrors.phone}</p>}
         </div>
 
         <div>
@@ -73,7 +80,7 @@ function CreateOrder() {
 
         <div>
           <input type="hidden" name="cart" value={JSON.stringify(cart)}/>
-          <button>Order now</button>
+          <button disabled={isSubmitting}>{isSubmitting ? 'Placing order...': 'Order now'}</button>
         </div>
       </Form>
     </div>
@@ -81,12 +88,23 @@ function CreateOrder() {
 }
 
 export const action = async ({ request }) => {
+  // Accessing the request from react router dom
  const formData = await request.formData();
+ // Transforming the formData into object
  const data = Object.fromEntries(formData)
 
+ // updating the order
  const order = { ...data, cart: JSON.parse(data.cart), priority: data.priority === 'on'}
 
+ // creating errors and validating phone number
+ const errors = {};
+ if(!isValidPhone(order.phone)) errors.phone = 'Please give us your correct phone number. We might need it to contact you.'
+
+ if(Object.keys(errors).length > 0) return errors;
+
+ // if everything is okay, create the order and redirect
  const newOrder = await createOrder(order);
+ // redirecting to the new route
  return redirect(`/order/${newOrder.id}`);
 }
 
