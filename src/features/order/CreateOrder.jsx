@@ -1,31 +1,31 @@
-import { useState } from "react";
-import { Form, redirect, useActionData, useNavigation } from "react-router-dom";
-import { createOrder } from "../../services/apiRestaurant";
+import { useState } from 'react';
+import { Form, redirect, useActionData, useNavigation } from 'react-router-dom';
+import { createOrder } from '../../services/apiRestaurant';
 
 // https://uibakery.io/regex-library/phone-number
 const isValidPhone = (str) =>
   /^\+?\d{1,4}?[-.\s]?\(?\d{1,3}?\)?[-.\s]?\d{1,4}[-.\s]?\d{1,4}[-.\s]?\d{1,9}$/.test(
-    str
+    str,
   );
 
 const fakeCart = [
   {
     pizzaId: 12,
-    name: "Mediterranean",
+    name: 'Mediterranean',
     quantity: 2,
     unitPrice: 16,
     totalPrice: 32,
   },
   {
     pizzaId: 6,
-    name: "Vegetale",
+    name: 'Vegetale',
     quantity: 1,
     unitPrice: 13,
     totalPrice: 13,
   },
   {
     pizzaId: 11,
-    name: "Spinach and Mushroom",
+    name: 'Spinach and Mushroom',
     quantity: 1,
     unitPrice: 15,
     totalPrice: 15,
@@ -33,11 +33,11 @@ const fakeCart = [
 ];
 
 function CreateOrder() {
-  const navigation = useNavigation()
-  const isSubmitting = navigation.state === "submitting"
+  const navigation = useNavigation();
+  const isSubmitting = navigation.state === 'submitting';
 
   // Getting access to the data connected with route that have the action.
-  const formsErrors = useActionData()
+  const formsErrors = useActionData();
 
   // const [withPriority, setWithPriority] = useState(false);
   const cart = fakeCart;
@@ -79,8 +79,13 @@ function CreateOrder() {
         </div>
 
         <div>
-          <input type="hidden" name="cart" value={JSON.stringify(cart)}/>
-          <button disabled={isSubmitting}>{isSubmitting ? 'Placing order...': 'Order now'}</button>
+          <input type="hidden" name="cart" value={JSON.stringify(cart)} />
+          <button
+            className="rounded-full bg-yellow-400 px-4 py-3 font-semibold uppercase tracking-wide text-stone-800 transition-colors duration-300 hover:bg-yellow-300 focus:outline-none focus:ring-2 focus:ring-yellow-300 focus:ring-offset-2 disabled:cursor-not-allowed"
+            disabled={true}
+          >
+            {isSubmitting ? 'Placing order...' : 'Order now'}
+          </button>
         </div>
       </Form>
     </div>
@@ -89,23 +94,29 @@ function CreateOrder() {
 
 export const action = async ({ request }) => {
   // Accessing the request from react router dom
- const formData = await request.formData();
- // Transforming the formData into object
- const data = Object.fromEntries(formData)
+  const formData = await request.formData();
+  // Transforming the formData into object
+  const data = Object.fromEntries(formData);
 
- // updating the order
- const order = { ...data, cart: JSON.parse(data.cart), priority: data.priority === 'on'}
+  // updating the order
+  const order = {
+    ...data,
+    cart: JSON.parse(data.cart),
+    priority: data.priority === 'on',
+  };
 
- // creating errors and validating phone number
- const errors = {};
- if(!isValidPhone(order.phone)) errors.phone = 'Please give us your correct phone number. We might need it to contact you.'
+  // creating errors and validating phone number
+  const errors = {};
+  if (!isValidPhone(order.phone))
+    errors.phone =
+      'Please give us your correct phone number. We might need it to contact you.';
 
- if(Object.keys(errors).length > 0) return errors;
+  if (Object.keys(errors).length > 0) return errors;
 
- // if everything is okay, create the order and redirect
- const newOrder = await createOrder(order);
- // redirecting to the new route
- return redirect(`/order/${newOrder.id}`);
-}
+  // if everything is okay, create the order and redirect
+  const newOrder = await createOrder(order);
+  // redirecting to the new route
+  return redirect(`/order/${newOrder.id}`);
+};
 
 export default CreateOrder;
